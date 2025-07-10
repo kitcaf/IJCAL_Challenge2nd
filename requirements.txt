@@ -1,0 +1,13 @@
+# 安装必要的依赖包
+pip install torch torch-geometric scikit-learn pandas matplotlib numpy
+
+# 或者使用conda安装
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+conda install pyg -c pyg
+pip install scikit-learn pandas matplotlib
+
+# 如果遇到PyTorch Geometric安装问题，可以尝试：
+pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.12.0+cu118.html
+
+# 检查安装
+python -c "import torch; import torch_geometric; print('安装成功!')"
