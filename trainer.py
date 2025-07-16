@@ -161,11 +161,16 @@ class Trainer:
                 all_labels.extend(batch.y.cpu().numpy())
         
         # 计算各种指标
+        # 计算每个类别的F1分数
+        f1_per_class = f1_score(all_labels, all_preds, average=None, zero_division=0)
+        
         metrics = {
             'loss': total_loss / len(data_loader),
             'accuracy': accuracy_score(all_labels, all_preds),
-            'f1_macro': f1_score(all_labels, all_preds, average='macro'),
-            'f1_weighted': f1_score(all_labels, all_preds, average='weighted'),
+            'f1_macro': f1_score(all_labels, all_preds, average='macro'),  # 宏平均F1：各类别F1分数的简单平均，不考虑样本数量
+            'f1_weighted': f1_score(all_labels, all_preds, average='weighted'),  # 加权平均F1：根据各类别样本数量加权平均，处理类别不平衡
+            'f1_normal': f1_per_class[0],  # 正常事件(类别0)的F1分数
+            'f1_bursty': f1_per_class[1],  # 突发事件(类别1)的F1分数
             'precision': precision_score(all_labels, all_preds, average='macro', zero_division=0),
             'recall': recall_score(all_labels, all_preds, average='macro', zero_division=0)
         }
@@ -229,6 +234,7 @@ class Trainer:
             print(f"Epoch {epoch+1}/{epochs} ({epoch_time:.2f}s)")
             print(f"  Train - Loss: {train_loss:.4f}, F1: {train_f1:.4f}")
             print(f"  Val   - Loss: {val_loss:.4f}, F1: {val_f1:.4f}, Acc: {val_acc:.4f}")
+            print(f"  Val   - 正常事件F1: {val_metrics['f1_normal']:.4f}, 突发事件F1: {val_metrics['f1_bursty']:.4f}")
             print(f"  LR: {current_lr:.6f}")
             
             # 保存最佳模型
@@ -317,10 +323,15 @@ def print_detailed_metrics(labels, preds, class_names=None):
     print("\n详细评估结果:")
     print("=" * 50)
     
+    # 计算每个类别的F1分数
+    f1_per_class = f1_score(labels, preds, average=None, zero_division=0)
+    
     # 整体指标
     print(f"准确率 (Accuracy): {accuracy_score(labels, preds):.4f}")
-    print(f"F1分数 (Macro): {f1_score(labels, preds, average='macro'):.4f}")
-    print(f"F1分数 (Weighted): {f1_score(labels, preds, average='weighted'):.4f}")
+    print(f"F1分数 (Macro): {f1_score(labels, preds, average='macro'):.4f}")  # 宏平均F1：各类别F1分数的简单平均
+    print(f"F1分数 (Weighted): {f1_score(labels, preds, average='weighted'):.4f}")  # 加权平均F1：根据样本数量加权平均
+    print(f"正常事件F1分数: {f1_per_class[0]:.4f}")  # 正常事件(类别0)的F1分数
+    print(f"突发事件F1分数: {f1_per_class[1]:.4f}")  # 突发事件(类别1)的F1分数
     print(f"精确率 (Macro): {precision_score(labels, preds, average='macro', zero_division=0):.4f}")
     print(f"召回率 (Macro): {recall_score(labels, preds, average='macro', zero_division=0):.4f}")
     
